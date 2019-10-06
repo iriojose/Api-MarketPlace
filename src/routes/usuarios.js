@@ -30,13 +30,13 @@ router.get('/usuarios/:id', (req,res) => {
 
 //ruta para añadir
 router.post('/usuarios', (req, res) => {
-    const {id , name , descripcion} = req.body;
+    const { name , email,password} = req.body;
 
     //no se por que no funciona la query1 gg
     const query = 'CALL usuariosAddOrEdit(?,?,?)';
-    const query2 = 'INSERT INTO usuarios(id,name,descripcion) VALUES(?,?,?)'
+    const query2 = 'INSERT INTO usuarios(name,email,password) VALUES(?,?,?)'
 
-    dbc.query( query2 , [id, name , descripcion] , (err, rows , fields) => {
+    dbc.query( query2 , [name , email , password] , (err, rows , fields) => {
         if(!err){
             res.json({Status : 'usuario agregado'});
         }else{
@@ -79,26 +79,26 @@ router.delete('/usuarios/:id/delete', (req,res) => {
 
 //auth route de prueba
 router.post('/auth', (req,res) => {
-    const {id, name} = req.body;
-    const query = "SELECT * FROM usuarios WHERE id = ? AND name = ?";
+    const {email, password} = req.body;
+    const query = "SELECT * FROM usuarios WHERE email = ? AND password = ?";
 
-    if(id && name){
-        dbc.query(query, [id,name] , (err,rows,fields) => {
+    if(email && password){
+        dbc.query(query, [email, password] , (err,rows,fields) => {
             if(rows.length > 0){
                 req.session.loggedin = true;
-                req.session.username = name;
-                res.json({Status:req.session.username+' ' + req.session.loggedin});
+                req.session.username = email;
+                res.json({usuario:req.session.username, loggin:req.session.loggedin});
             }else{
                 res.json({Status: 'sus datos no se encontraron'});
             }
         })
     }else{
-        res.json({Status:'ingrese id y name'});
+        res.json({Status:'ingrese email y password'});
     }
        
 });
 
-//redireccionamiento
+//redireccionamiento //esto es estupido XD 
 router.get('/home' ,(req,res) => {
     if(req.session.loggedin === undefined){
         res.json({Status: req.session.username});
