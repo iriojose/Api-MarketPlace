@@ -4,10 +4,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const dbc = require('../database');
+const helpers = require('../helpers/index');
 
 //ruta que trae a todos los usuarios
-router.get('/usuarios', (req,res ) => {
-    dbc.query('SELECT * FROM usuarios', (err, rows, fields) => {
+router.get('/usuarios', async (req,res ) => {
+    await dbc.query('SELECT * FROM usuarios', (err, rows, fields) => {
         if(!err){
             res.json(rows);
         }else{
@@ -21,7 +22,11 @@ router.get('/usuarios/:id', (req,res) => {
     const {id} = req.params;
     dbc.query('SELECT * FROM usuarios WHERE id = ?',[id], (err,rows, fields) => {
         if(!err){
-            res.json(rows);
+            if(rows.length > 0){
+                res.json(rows[0]);
+            }else{
+                res.json({Status:'no se encontro el usuario'});
+            }
         }else{
             res.json({Status:'algo salio mal'});
         }
@@ -29,12 +34,14 @@ router.get('/usuarios/:id', (req,res) => {
 });
 
 //ruta para añadir
-router.post('/usuarios', (req, res) => {
-    const { name , email,password} = req.body;
+router.post('/usuarios', async (req, res) => {
+   const { name , email,password} = req.body;
 
     //no se por que no funciona la query1 gg
     const query = 'CALL usuariosAddOrEdit(?,?,?)';
     const query2 = 'INSERT INTO usuarios(name,email,password) VALUES(?,?,?)'
+    //const salt = await bcrypt.genSalt(10);
+    //password = await bcrypt.hash(password,salt);
 
     dbc.query( query2 , [name , email , password] , (err, rows , fields) => {
         if(!err){
@@ -65,11 +72,11 @@ router.put('/usuarios/:id/edit', (req, res) => {
 
 //ruta para eliminar
 router.delete('/usuarios/:id/delete', (req,res) => {
-    const {id} = req.body;
+    const {id} = req.params;
     const query = 'DELETE FROM usuarios WHERE id = ?'
 
     dbc.query(query,[id], (err,rows,fields) => {
-        if(!err){
+        if(!err ){
             res.json({Status : 'usuario eliminado'});
         }else{
             console.log(err);
@@ -78,16 +85,20 @@ router.delete('/usuarios/:id/delete', (req,res) => {
 });
 
 //auth route de prueba
-router.post('/auth', (req,res) => {
+router.post('/auth', async (req,res) => {
     const {email, password} = req.body;
-    const query = "SELECT * FROM usuarios WHERE email = ? AND password = ?";
+    const query = "SELECT * FROM usuarios WHERE email = ? ";
 
     if(email && password){
-        dbc.query(query, [email, password] , (err,rows,fields) => {
-            if(rows.length > 0){
-                req.session.loggedin = true;
-                req.session.username = email;
-                res.json({usuario:req.session.username, loggin:req.session.loggedin});
+        dbc.query(query, [email] , (err,rows,fields) => {
+            if(rows.length > 0){ 
+                if(password == rows[0].password ){
+                    req.session.loggedin = true;
+                    req.session.username = email;
+                    res.json({usuario:req.session.username, loggin:req.session.loggedin});
+                }else{
+                    res.json({Status: 'su clave es incorrecta'});
+                }
             }else{
                 res.json({Status: 'sus datos no se encontraron'});
             }

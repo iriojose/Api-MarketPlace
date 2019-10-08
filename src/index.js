@@ -9,7 +9,7 @@ app.set('port', process.env.PORT || 3000);
     app.use(session({
         secret: 'dont ask',
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false,
         cookie: {maxAge: 60000}
     }));
 
