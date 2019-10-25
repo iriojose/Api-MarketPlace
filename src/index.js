@@ -27,6 +27,8 @@ app.use(express.json());
 
 //routes
 app.use(require('./routes/usuarios'));
+app.use(require('./routes/users'));
+app.use(require('./routes/tiendas'));
 
 //starting server
 app.listen(app.get('port') , () => {

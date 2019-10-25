@@ -6,6 +6,17 @@ const bcrypt = require('bcryptjs');
 const dbc = require('../database');
 const helpers = require('../helpers/index');
 
+router.get('/categorias', async (req,res ) => {
+    await dbc.query('SELECT * FROM categorias', (err, rows, fields) => {
+        if(!err){
+            res.json(rows);
+        }else{
+            console.log(err);
+        }
+    });
+});
+
+
 //ruta que trae a todos los usuarios
 router.get('/usuarios', async (req,res ) => {
     await dbc.query('SELECT * FROM usuarios', (err, rows, fields) => {
